@@ -3,7 +3,7 @@
 import { User } from "@prisma/client";
 import axios from "axios";
 import Image from "next/image";
-import { FC, FormEvent, useState } from "react";
+import { ChangeEvent, FC, FormEvent, useState } from "react";
 
 const Header: FC = () => {
   const [user, setUser] = useState<User>();
@@ -70,16 +70,50 @@ const Header: FC = () => {
     }
   };
 
+  const onUploadFile = async (e: ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!e.target.files || !user) return;
+
+      const formData = new FormData();
+
+      formData.append("account", user.account);
+      formData.append("file", e.target.files[0]);
+
+      const response = await axios.put<User>(
+        `${process.env.NEXT_PUBLIC_URL}/api/user/image`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setUser(await response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <header className="flex justify-end py-2">
         {user ? (
           <div className="flex gap-2">
-            <Image
-              src={`/images/${user.profileImage}`}
-              alt={user.nickname}
-              width={24}
-              height={24}
+            <label className="cursor-pointer" htmlFor="uploadFile">
+              <Image
+                src={`/images/${user.profileImage}`}
+                alt={user.nickname}
+                width={24}
+                height={24}
+              />
+            </label>
+            <input
+              id="uploadFile"
+              className="hidden"
+              type="file"
+              accept="image/*"
+              onChange={onUploadFile}
             />
             <button className="w-24 text-left truncate" onClick={onModalOpen}>
               {user.nickname}
