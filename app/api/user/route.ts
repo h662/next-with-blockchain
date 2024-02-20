@@ -50,3 +50,59 @@ export const POST = async (request: NextRequest) => {
     );
   }
 };
+
+export const PUT = async (request: NextRequest) => {
+  try {
+    const { account, nickname } = await request.json();
+
+    if (!account || !nickname) {
+      return NextResponse.json(
+        {
+          message: "Not exist data.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const existUser = await client.user.findUnique({
+      where: {
+        account,
+      },
+    });
+
+    if (!existUser) {
+      return NextResponse.json(
+        {
+          message: "Not exist user.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const updatedUser = await client.user.update({
+      where: {
+        account,
+      },
+      data: {
+        nickname,
+      },
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        message: "Server Error.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+};
